@@ -29,7 +29,7 @@ RUN set -ex \
 	&& gnuArch="i686-linux" \
 	&& ./configure \
 		--build="$gnuArch" \
-		--enable-unicode=ucs4 \
+		--enable-unicode=ucs2 \
 	&& make -j "$(nproc)" \
 	&& make install \
 	&& ldconfig \
