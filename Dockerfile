@@ -1,4 +1,4 @@
-FROM buildpack-deps:stretch
+FROM centos:6
 
 # ensure local python is preferred over distribution python
 ENV PATH /usr/local/bin:$PATH
@@ -10,28 +10,23 @@ ENV LANG C.UTF-8
 ENV PYTHONIOENCODING UTF-8
 
 # extra dependencies (over what buildpack-deps already includes)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		tk-dev \
-	&& rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+# 		tk-dev \
+# 	&& rm -rf /var/lib/apt/lists/*
+RUN yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel
 
 ENV GPG_KEY C01E1CAD5EA2C4F0B8E3571504C367C218ADD4FF
 ENV PYTHON_VERSION 2.7.15
 
 RUN set -ex \
 	\
-	&& wget -O python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" \
-	&& wget -O python.tar.xz.asc "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" \
-	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEY" \
-	&& gpg --batch --verify python.tar.xz.asc python.tar.xz \
-	&& { command -v gpgconf > /dev/null && gpgconf --kill all || :; } \
-	&& rm -rf "$GNUPGHOME" python.tar.xz.asc \
+	&& curl -o python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" \
 	&& mkdir -p /usr/src/python \
 	&& tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \
 	&& rm python.tar.xz \
 	\
 	&& cd /usr/src/python \
-	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+	&& gnuArch="i686-linux" \
 	&& ./configure \
 		--build="$gnuArch" \
 		--enable-unicode=ucs4 \
@@ -54,7 +49,7 @@ ENV PYTHON_PIP_VERSION 18.1
 
 RUN set -ex; \
 	\
-	wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py'; \
+	curl -o get-pip.py 'https://bootstrap.pypa.io/get-pip.py'; \
 	\
 	python get-pip.py \
 		--disable-pip-version-check \
